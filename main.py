@@ -1,15 +1,33 @@
 #!/usr/bin/python
+import spacy
 import torch
 from transformers import BertModel, BertTokenizer
 from collections import defaultdict
 from sklearn.metrics.pairwise import cosine_similarity
 import random
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+import uvicorn
 
 app = FastAPI()
 
-CATEGORIES = {'1': ('Title 1', 'Die Fensterscheibe meines Autos fährt nicht mehr korrekt hoch und ich muss trotz Garantie 200 Euro für die Reparatur zahlen. Ich fahre einen VW.'),
-              '2': ('Title 2', 'Ich bin letzte Woche Freitag, am 21.02.2020 nach München geflogen mit easyjet und mein Flug hatte 3 Stunden verspätung.')}
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+CATEGORIES = {'1': ('Verbraucherrechte Kinderspielzeug', 'Falsch gekennzeichnete Lebensmittel, giftige Chemikalien in Kinderspielzeug, unfaire Geschäftsbedingen im Online-Handel, oder Mängel beim Datenschutz.'),
+              '2': ('EU-Fluggastrechte', 'Flüge innerhalb der EU, die von einer Fluggesellschaft aus der EU oder einem Nicht-EU-Land durchgeführt werden. Flüge aus einem Nicht-EU-Land in die EU, die von einer Fluggesellschaft aus der EU durchgeführt werden. Flüge aus der EU in ein Nicht-EU-Land, die von einer Fluggesellschaft aus der EU oder einem Nicht-EU-Land durchgeführt werden. Sofern noch keine Leistungen (Entschädigung, anderweitige Beförderung, Unterstützung durch die Fluggesellschaft) bei flugbedingten Problemen für dieselbe Reise nach den Rechtvorschriften eines Nicht-EU-Landes gewährt wurden. Unter EU sind hier die 27 EU-Länder einschließlich Guadeloupe, Französisch-Guayana, Martinique, Réunion, Mayotte, Saint Martin (Französische Antillen), die Azoren, Madeira und die Kanarischen Inseln sowie Islanden, Norwegenen, die Schweiz und das Vereinigte Königreich zu verstehen. Nicht dazu gehören die Färöer, die Insel Man und die Kanalinseln.'), '3': ('Lärmbelästigung im Urlaub', 'Der Reiseveranstalter ist verpflichtet, die Reise so zu erbringen, dass sie die zugesicherten Eigenschaften hat und nicht mit Fehlern behaftet ist, die den Wert oder die Tauglichkeit zu dem gewöhnlichen oder nach dem Vertrag vorausgesetzten Nutzen aufheben oder mindern (§ 651c Abs. 2 BGB). Ist die Reise mangelhaft, kann der Reisende Abhilfe verlangen und für die Dauer der Mangelhaftigkeit den Reisepreis mindern. Voraussetzung ist aber, dass er vorher dem Veranstalter die Mangelhaftigkeit angezeigt hat, damit dieser Abhilfe schaffen kann (§ 651d Abs. 2 BGB). Die „beliebteste“ Mängelrüge gegenüber Reiseveranstaltern schlechthin, das ist die Dauerbelästigung durch Baulärm vor oder sogar im Hotel.'), '4': ('Verbraucherrechte in anderen EU-Ländern', 'Beim Kauf von Waren oder Dienstleistungen in der EU müssen Sie eindeutig über den Gesamtpreis, einschließlich aller Steuern und Zusatzkosten, informiert werden. Beim Online-Kauf sollten Sie – z. B. durch einen Klick auf eine Schaltfläche – ausdrücklich bestätigen müssen, dass Sie sich darüber bewusst sind, dass das Absenden Ihrer Bestellung Ihre Zahlungspflicht auslöst. Bei Online-Zahlungen von mehr als 30 Euro müssen Sie sich mit einer Kombination aus mindestens zwei Erkennungsmerkmalen legitimieren: mit Ihrem Mobiltelefon oder Kartenleser (persönliche Gegenstände) UND Ihrem PIN oder Passwort (persönliche Informationen) mit Ihrem Mobiltelefon oder Kartenleser (persönliche Gegenstände) UND Ihrem Fingerabdruck (körperliches Erkennungsmerkmal) mit Ihrem PIN oder Passwort (persönliche Informationen) UND Ihrem Fingerabdruck (körperliches Erkennungsmerkmal) Dies erhöht die Sicherheit der Zahlungsvorgänge.'), '5': ('Gewährleistung Autofenster', 'Der Verkäufer VW hat dem Käufer im Rahmen der Gewährleistung den Schaden am Autofenster zu ersetzen.')}
 
 # load BERT model
 device = "cpu"
@@ -95,11 +113,15 @@ def get_category_data(cat_id):
 
 def get_sentence_entities(sentence):
     output = {}
-    output['sentence'] = sentence
+#     output['sentence'] = sentence
     
     doc = nlp(sentence)
     
     entities = []
+    
+    new_sent = ""
+    
+    prev_end = 0
     
     for ent in doc.ents:
         entity = {}
@@ -109,7 +131,11 @@ def get_sentence_entities(sentence):
         entity['end'] = ent.end_char
         entities.append(entity)
         
+        new_sent += sentence[prev_end:ent.start_char] + '**{}**'.format(ent.text)
+        prev_end = ent.end_char
+        
     output['named_entities'] = entities
+    output['sentence'] = new_sent
     
     return output
 
@@ -126,6 +152,7 @@ def generate_output(ranked_categories):
 
         output['rank'] = i+1
         output['entities'] = get_sentence_entities(desc)
+#        output['entities'] = {}
         output['case'] = temp
         outputs.append(output)
         temp = {}
@@ -160,7 +187,7 @@ def run(user_input):
     ranked_categories = ranked_categories[:5]  # filter top 5 results
     
 #     output = generate_output(ranked_categories)
-    output = generate_output_v2(ranked_categories)
+    output = generate_output(ranked_categories)
     
     return output
 

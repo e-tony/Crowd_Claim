@@ -5,7 +5,7 @@ WORKDIR /app
 
 RUN pip install transformers fastapi scikit-learn torch==1.4.0+cpu torchvision==0.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
-RUN pip install uvicorn
+RUN python -m spacy download de_core_news_md
 
 EXPOSE 8000
 
