@@ -8,6 +8,7 @@ import random
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn
+import json
 
 app = FastAPI()
 
@@ -26,8 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-CATEGORIES = {'1': ('Verbraucherrechte Kinderspielzeug', 'Falsch gekennzeichnete Lebensmittel, giftige Chemikalien in Kinderspielzeug, unfaire Geschäftsbedingen im Online-Handel, oder Mängel beim Datenschutz.'),
-              '2': ('EU-Fluggastrechte', 'Flüge innerhalb der EU, die von einer Fluggesellschaft aus der EU oder einem Nicht-EU-Land durchgeführt werden. Flüge aus einem Nicht-EU-Land in die EU, die von einer Fluggesellschaft aus der EU durchgeführt werden. Flüge aus der EU in ein Nicht-EU-Land, die von einer Fluggesellschaft aus der EU oder einem Nicht-EU-Land durchgeführt werden. Sofern noch keine Leistungen (Entschädigung, anderweitige Beförderung, Unterstützung durch die Fluggesellschaft) bei flugbedingten Problemen für dieselbe Reise nach den Rechtvorschriften eines Nicht-EU-Landes gewährt wurden. Unter EU sind hier die 27 EU-Länder einschließlich Guadeloupe, Französisch-Guayana, Martinique, Réunion, Mayotte, Saint Martin (Französische Antillen), die Azoren, Madeira und die Kanarischen Inseln sowie Islanden, Norwegenen, die Schweiz und das Vereinigte Königreich zu verstehen. Nicht dazu gehören die Färöer, die Insel Man und die Kanalinseln.'), '3': ('Lärmbelästigung im Urlaub', 'Der Reiseveranstalter ist verpflichtet, die Reise so zu erbringen, dass sie die zugesicherten Eigenschaften hat und nicht mit Fehlern behaftet ist, die den Wert oder die Tauglichkeit zu dem gewöhnlichen oder nach dem Vertrag vorausgesetzten Nutzen aufheben oder mindern (§ 651c Abs. 2 BGB). Ist die Reise mangelhaft, kann der Reisende Abhilfe verlangen und für die Dauer der Mangelhaftigkeit den Reisepreis mindern. Voraussetzung ist aber, dass er vorher dem Veranstalter die Mangelhaftigkeit angezeigt hat, damit dieser Abhilfe schaffen kann (§ 651d Abs. 2 BGB). Die „beliebteste“ Mängelrüge gegenüber Reiseveranstaltern schlechthin, das ist die Dauerbelästigung durch Baulärm vor oder sogar im Hotel.'), '4': ('Verbraucherrechte in anderen EU-Ländern', 'Beim Kauf von Waren oder Dienstleistungen in der EU müssen Sie eindeutig über den Gesamtpreis, einschließlich aller Steuern und Zusatzkosten, informiert werden. Beim Online-Kauf sollten Sie – z. B. durch einen Klick auf eine Schaltfläche – ausdrücklich bestätigen müssen, dass Sie sich darüber bewusst sind, dass das Absenden Ihrer Bestellung Ihre Zahlungspflicht auslöst. Bei Online-Zahlungen von mehr als 30 Euro müssen Sie sich mit einer Kombination aus mindestens zwei Erkennungsmerkmalen legitimieren: mit Ihrem Mobiltelefon oder Kartenleser (persönliche Gegenstände) UND Ihrem PIN oder Passwort (persönliche Informationen) mit Ihrem Mobiltelefon oder Kartenleser (persönliche Gegenstände) UND Ihrem Fingerabdruck (körperliches Erkennungsmerkmal) mit Ihrem PIN oder Passwort (persönliche Informationen) UND Ihrem Fingerabdruck (körperliches Erkennungsmerkmal) Dies erhöht die Sicherheit der Zahlungsvorgänge.'), '5': ('Gewährleistung Autofenster', 'Der Verkäufer VW hat dem Käufer im Rahmen der Gewährleistung den Schaden am Autofenster zu ersetzen.')}
+with open('example_text.json', 'r') as f:
+     CATEGORIES = json.loads(f)
 
 # load BERT model
 device = "cpu"
