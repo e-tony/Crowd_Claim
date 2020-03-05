@@ -10,5 +10,6 @@ RUN /venv/bin/pip install -r /requirements.txt
 RUN python -m spacy download de_core_news_md
 
 EXPOSE 8000
+USER 1001
 
 ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
